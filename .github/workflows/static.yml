@@ -2,8 +2,8 @@ name: Deploy MkDocs with Pages Deployment API
 
 on:
   push:
-    branches: [develop]
-
+    branches: 
+      - develop  # Se ejecuta cuando haces push a la rama main
 permissions:
   pages: write
   id-token: write
