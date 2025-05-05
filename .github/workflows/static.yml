@@ -1,53 +1,36 @@
-name: Deploy MkDocs to Pages
+name: Deploy MkDocs site to GitHub Pages
 
 on:
   push:
-    branches: ["develop"]
-  workflow_dispatch:
+    branches:
+      - develop  # Se ejecuta al hacer push a main
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  contents: write  # Necesario para hacer push a gh-pages
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
 
-      - name: Install MkDocs
-        run: pip install mkdocs-material mkdocs-pdf-export-plugin mkpdfs-mkdocs mkdocs mkdocs-minify-plugin mkdocs-git-revision-date-localized-plugin
+    - name: Install dependencies
+      run: |
+        pip install mkdocs
 
-      - name: Build site
-        run: cd docs && mkdocs build
+    - name: Build MkDocs site
+      run: mkdocs build
 
-      - name: Debug - List generated files
-        run: |
-          echo "Contents of docs/site:"
-          ls -la docs/site
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'docs/site'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./site
+        publish_branch: gh-pages
