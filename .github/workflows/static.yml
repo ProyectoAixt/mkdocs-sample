@@ -1,36 +1,45 @@
-name: Deploy MkDocs site to GitHub Pages
+name: Deploy MkDocs with Pages Deployment API
 
 on:
   push:
-    branches:
-      - develop  # Se ejecuta al hacer push a main
+    branches: [develop]
 
 permissions:
-  contents: write  # Necesario para hacer push a gh-pages
+  pages: write
+  id-token: write
+  contents: read
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        pip install mkdocs
+    - name: Install MkDocs
+      run: pip install mkdocs
 
-    - name: Build MkDocs site
+    - name: Build site
       run: mkdocs build --config-file docs/mkdocs.yml
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v2
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./site
-        publish_branch: gh-pages
+        path: ./site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2
